@@ -1,0 +1,4 @@
+watchdog==0.9.0
+pandas==0.24.2
+gspread==3.1.0
+google_api_python_client==1.7.11
