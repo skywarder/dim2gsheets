@@ -78,9 +78,9 @@ class Dim_reader():
             
             logging.debug('Found {num} new lines, saving to the spreadsheet'.format(num=new_lines.shape[0]))
             for idx, row in new_lines.iterrows():
-                self.saver.add_row(row.drop('Datetime')) # Because gspread cannot save Timestamp object to JSON
+                if (self.saver.add_row(row.drop('Datetime'))): # drop - because gspread cannot save Timestamp object to JSON
+                    self.last_line_time = row['Datetime'] # Timestamp from the last saved line
                 # TODO Use bulk saving (not by a single line)
-                self.last_line_time = row['Datetime'] # Timestamp from the last saved line
         else:
             logging.debug("Datasource is empty after reading CSV")
             return 

@@ -53,11 +53,12 @@ class GSheets_saver():
             try:
                 self.next_row = self.next_available_row()
                 self._add_row2gsheet(_new_line)
-                break;
+                return True
             except Exception as e:
-                logging.warning('Iter {i} - Cannot save line with EAN={ean}:\n{error}\n'.format(
-                    i=iter,ean=_new_line[0], error=e))
+                logging.warning('Iter {i} of {total} - Cannot save line with EAN={ean}:\n{error}\n'.format(
+                    i=iter, total=self.RETRIES_NUMBER, ean=_new_line[0], error=e))
             iter += 1
+        return False
             
     def _add_row2gsheet(self, _new_line):        
         cell_list = self.worksheet.range(self.next_row, 1, self.next_row, len(_new_line))
