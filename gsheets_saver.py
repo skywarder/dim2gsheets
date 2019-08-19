@@ -14,6 +14,9 @@ class GSheets_saver():
     def __init__(self, _config):
         self.worksheet = None
         self.next_row = None
+        self.gc = None
+        self.credentials = None
+        
         try:
             self.CRED_FILENAME          = _config.get("GSheets_saver", "CRED_FILENAME")
             self.SPREADSHEET_ID         = _config.get("GSheets_saver", "SPREADSHEET_ID")
@@ -29,10 +32,10 @@ class GSheets_saver():
         SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
         
         try:
-            credentials = ServiceAccountCredentials.from_json_keyfile_name(self.CRED_FILENAME, SCOPES)
+            self.credentials = ServiceAccountCredentials.from_json_keyfile_name(self.CRED_FILENAME, SCOPES)
 
-            gc = gspread.authorize(credentials)
-            self.worksheet = gc.open_by_key(self.SPREADSHEET_ID).sheet1
+            self.gc = gspread.authorize(self.credentials)
+            self.worksheet = self.gc.open_by_key(self.SPREADSHEET_ID).sheet1
             self.next_row = self.next_available_row()
             
         except Exception as e:
@@ -55,6 +58,9 @@ class GSheets_saver():
                 self._add_row2gsheet(_new_line)
                 return True
             except Exception as e:
+                if self.credentials.access_token_expired:   # every hour
+                    self.gc.login()                         # refreshes the token
+                    continue
                 logging.warning('Iter {i} of {total} - Cannot save line with EAN={ean}:\n{error}\n'.format(
                     i=iter, total=self.RETRIES_NUMBER, ean=_new_line[0], error=e))
             iter += 1
