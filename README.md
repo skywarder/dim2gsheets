@@ -21,8 +21,8 @@ git pull origin master
 ```
 ## Settings
 1. Run QBit-DB and set auto export to CSV after each measurement and format for exported file:
- - delimiter = ','
- - decimals = '.'
+ - delimiter = ';'
+ - decimals = ','  (QBit-DB use only comma, cannot switch to dot)
  - date time format = dd.mm.yyyy H:M:S
 2. Run python app first time to create 'Settings.ini' file
 3. Set up settings in settings.ini file:
@@ -30,7 +30,8 @@ git pull origin master
  - Google Spreadsheets ID
  - Google API credentials (https://gspread.readthedocs.io/en/latest/oauth2.html)
  - Column name in CSV file for Date-Time
- - CSV format (',','.')
+ - CSV format (';','.')
+ - Encoding
  - etc
  
 ## Running the application
