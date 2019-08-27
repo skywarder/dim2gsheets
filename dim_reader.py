@@ -77,8 +77,15 @@ class Dim_reader():
             new_lines.fillna('', inplace=True)
             
             logging.debug('Found {num} new lines, saving to the spreadsheet'.format(num=new_lines.shape[0]))
+            if (new_lines.shape[0] > 1):
+                tmp_time_stamp = new_lines.tail(1)['Datetime']
+                if (self.saver.add_rows_bulk(new_lines.drop(columns=['Datetime']))):
+                    self.last_line_time = tmp_time_stamp
+                    return
+            #else:
             for idx, row in new_lines.iterrows():
-                if (self.saver.add_row(row.drop('Datetime'))): # drop - because gspread cannot save Timestamp object to JSON
+                # drop - because gspread cannot save Timestamp object to JSON
+                if (self.saver.add_row(row.drop('Datetime'))): 
                     self.last_line_time = row['Datetime'] # Timestamp from the last saved line
                 # TODO Use bulk saving (not by a single line)
         else:

@@ -77,7 +77,42 @@ class GSheets_saver():
             i += 1
         # Update in batch
         self.worksheet.update_cells(cell_list)   
-
+    
+    def add_rows_bulk(self, _new_lines):
+        iter = 1 # first try to save the line
+        while ((self.RETRIES_NUMBER == 0) or (iter <= self.RETRIES_NUMBER)):
+            try:
+                self.next_row = self.next_available_row()
+                self._add_row2gsheet_bulk(_new_lines)
+                return True
+            except Exception as e:
+                if self.credentials.access_token_expired:   # every hour
+                    self.gc.login()                         # refreshes the token
+                    continue
+                logging.warning('Iter {i} of {total} - Cannot save {num} lines:\n{error}\n'.format(
+                    i=iter, total=self.RETRIES_NUMBER, num=_new_lines.shape[0], error=e))
+            iter += 1
+        return False
+            
+    def _add_row2gsheet_bulk(self, _new_lines):
+        rows = _new_lines.shape[0]
+        cols = _new_lines.shape[1]
+        
+        cell_list = self.worksheet.range(self.next_row, 
+                                         1, 
+                                         self.next_row + rows - 1, 
+                                         cols)
+        for cell in cell_list:
+            #if type(_new_line[i]) is pandas.Timestamp:
+            #    cell.value = str(_new_line[i])
+            #else:
+            for i_row in range(rows):
+                for i_col in range(cols):
+                    cell.value = _new_line.iloc[i_row, i_col]
+        # Update in batch
+        self.worksheet.update_cells(cell_list) 
+        
+    
     def get_last_timestamp(self, _col_name):
         try:
             col_num = self.worksheet.find(_col_name).col
