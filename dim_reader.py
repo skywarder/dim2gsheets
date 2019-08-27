@@ -40,6 +40,7 @@ class Dim_reader():
             sys.exit()
             
         self.last_line_time = self.saver.get_last_timestamp(self.DIM_TIMESTAMP_COLUMN)
+        self.get_new_line()
         
     def wait_for_updates(self):
         event_handler = CSVFileHandler(self)
@@ -72,22 +73,21 @@ class Dim_reader():
             #data_src['Datetime'] = pandas.to_datetime(data_src.iloc[self.DIM_TIMESTAMP_COLUMN],
             data_src['Datetime'] = pandas.to_datetime(data_src[self.DIM_TIMESTAMP_COLUMN],
                                                      errors='coerce')
-            logging.debug(data_src[['Item Number', 'Date-Time','Datetime']].head(10))
+            #logging.debug(data_src[['Item Number', 'Date-Time','Datetime']].head(10))
             new_lines = data_src[data_src['Datetime'] > self.last_line_time]
             new_lines.fillna('', inplace=True)
             
             logging.debug('Found {num} new lines, saving to the spreadsheet'.format(num=new_lines.shape[0]))
             if (new_lines.shape[0] > 1):
-                tmp_time_stamp = new_lines.tail(1)['Datetime']
+                #logging.debug("bulk upd >>> timestamp = {ts}\n line >>>> {line}".format(ts=new_lines.tail(1)['Datetime'], line=new_lines.tail(1)))
                 if (self.saver.add_rows_bulk(new_lines.drop(columns=['Datetime']))):
-                    self.last_line_time = tmp_time_stamp
+                    self.last_line_time = self.saver.get_last_timestamp(self.DIM_TIMESTAMP_COLUMN)
                     return
             #else:
             for idx, row in new_lines.iterrows():
                 # drop - because gspread cannot save Timestamp object to JSON
                 if (self.saver.add_row(row.drop('Datetime'))): 
                     self.last_line_time = row['Datetime'] # Timestamp from the last saved line
-                # TODO Use bulk saving (not by a single line)
         else:
             logging.debug("Datasource is empty after reading CSV")
             return 

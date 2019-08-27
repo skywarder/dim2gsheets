@@ -102,13 +102,13 @@ class GSheets_saver():
                                          1, 
                                          self.next_row + rows - 1, 
                                          cols)
-        for cell in cell_list:
-            #if type(_new_line[i]) is pandas.Timestamp:
-            #    cell.value = str(_new_line[i])
-            #else:
-            for i_row in range(rows):
-                for i_col in range(cols):
-                    cell.value = _new_line.iloc[i_row, i_col]
+        
+        logging.debug('DF shape = {dshape} \n cell_list len = {ln} \n'.format(dshape=_new_lines.shape, ln = len(cell_list)))
+        
+        for i_row in range(rows):
+            for i_col in range(cols):
+                cell = cell_list[i_row * cols + i_col]
+                cell.value = _new_lines.iloc[i_row, i_col]
         # Update in batch
         self.worksheet.update_cells(cell_list) 
         
