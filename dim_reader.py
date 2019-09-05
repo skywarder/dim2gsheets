@@ -63,7 +63,9 @@ class Dim_reader():
                                        delimiter=self.DIM_FILE_DELIMITER, 
                                        decimal=self.DIM_FILE_DECIMALS, 
                                        encoding=self.DIM_FILE_ENCODING,
-                                       warn_bad_lines=True, error_bad_lines=False)
+                                       warn_bad_lines=True, 
+                                       error_bad_lines=False,
+                                       dayfirst=True)
         except Exception as e:
             logging.error('Error while reading CSV file: {name}...:\n{error}\n'.format(
                 name=self.DIM_FILE_PATH, error=e))
@@ -72,7 +74,8 @@ class Dim_reader():
         if not data_src.empty:
             #data_src['Datetime'] = pandas.to_datetime(data_src.iloc[self.DIM_TIMESTAMP_COLUMN],
             data_src['Datetime'] = pandas.to_datetime(data_src[self.DIM_TIMESTAMP_COLUMN],
-                                                     errors='coerce')
+                                                     errors='coerce',
+                                                     dayfirst=True)
             #logging.debug(data_src[['Item Number', 'Date-Time','Datetime']].head(10))
             new_lines = data_src[data_src['Datetime'] > self.last_line_time]
             new_lines.fillna('', inplace=True)
