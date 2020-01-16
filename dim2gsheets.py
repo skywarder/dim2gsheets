@@ -27,6 +27,7 @@ def createConfig(path):
     # DIM_Reader
     config.add_section("Dim_reader")
     config.set("Dim_reader", "DIM_FILE_PATH", "./input/dims.csv")
+    #config.set("Dim_reader", "DIM_FILE_PATH", "./input/data_2019-10-19.sqlite")
     config.set("Dim_reader", "DIM_FILE_CHECK_INTERVAL", "10")
     config.set("Dim_reader", "DIM_FILE_DELIMITER", ",")
     config.set("Dim_reader", "DIM_FILE_DECIMALS", ".")
@@ -52,13 +53,15 @@ if __name__ == "__main__":
     
     config = configparser.ConfigParser()
     config.read(config_path)
-    
+
+    filename, file_extension = os.path.splitext(config.get("Dim_reader", "DIM_FILE_PATH"))
+
     log_level = int(config.get("General", "log_level"))
     if (log_level):
         logging.basicConfig(level=log_level)
     
     saver = GSheets_saver(config)
-    dim_reader = Dim_reader(config, saver)
+    dim_reader = Dim_reader.constructor(file_extension, config, saver)
     dim_reader.wait_for_updates() # infinite cycle
     
 # ---------------------------------------------------
