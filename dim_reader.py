@@ -75,13 +75,13 @@ class Dim_reader():
         # should be implemented in child class
         return
 
-    def __process_data(self, data_src):
+    def _process_data(self, data_src):
         if not data_src.empty:
             # data_src['Datetime'] = pandas.to_datetime(data_src.iloc[self.DIM_TIMESTAMP_COLUMN],
             data_src['Datetime'] = pandas.to_datetime(data_src[self.DIM_TIMESTAMP_COLUMN],
                                                       errors='coerce',
                                                       dayfirst=True)
-            # logging.debug(data_src[['Item Number', 'Date-Time','Datetime']].head(10))
+            #logging.debug(data_src[['Item Number', 'Date-Time','Datetime']].head(10))
             new_lines = data_src[data_src['Datetime'] > self.last_line_time]
             new_lines.fillna('', inplace=True)
 
@@ -116,21 +116,26 @@ class Dim_reader_CSV(Dim_reader):
                 name=self.DIM_FILE_PATH, error=e))
             raise e
 
-        self.__process_data(data_src)
+        self._process_data(data_src)
 
 # --------------------- CSV Reader -------------------------
 class Dim_reader_sqlite(Dim_reader):
     def __init__(self, _config, _saver):
+        self.engine = create_engine('sqlite:///{}'.format(os.path.abspath(_config.get("Dim_reader", "DIM_FILE_PATH"))))
+        self.sql_table_columns = ['Gtin', 'Length', 'Width', 'Height', 'Weight','UTimestamp']
         super(Dim_reader_sqlite, self).__init__(_config, _saver)
-        self.engine = create_engine('sqlite:///{}'.format(os.path.abspath(self.DIM_FILE_PATH)))
 
     def get_new_line(self):
         try:
             with self.engine.connect() as conn, conn.begin():
-                data_src = pandas.read_sql_table('goods', conn)
+                data_src = pandas.read_sql_table('Goods', conn, columns=self.sql_table_columns)
         except Exception as e:
             logging.error('Error while reading CSV file: {name}...:\n{error}\n'.format(
                 name=self.DIM_FILE_PATH, error=e))
             raise e
 
-        self.__process_data(data_src)
+        data_src[self.DIM_TIMESTAMP_COLUMN] = pandas.to_datetime(data_src[self.DIM_TIMESTAMP_COLUMN],
+                                                      errors='coerce',
+                                                      unit='s').dt.strftime('%d.%m.%Y %H:%M:%S')
+
+        self._process_data(data_src)
